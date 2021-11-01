@@ -5,7 +5,7 @@ require('dotenv').config();
 const ObjectId = require('mongodb').ObjectId;
 
 const app = express();
-const port = process.env.PORT || 6000;
+const port = process.env.PORT || 5000;
 
 // MIDDLEWARE 
 app.use(cors());
@@ -17,16 +17,16 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 
 async function run() {
     try{
-
         await client.connect();
-        const database = client.db("Travel & Tourism");
+        const database = client.db("Travel");
         const servicesCollection = database.collection("services")
 
         // Get Single Item
         app.get('/services/:id', async(req,res) => {
             const id = req.params.id;
+            const query = {_id : ObjectId(id)};
             console.log("getting id", id);
-            const service = await servicesCollection.findOne(query)
+            const service = await servicesCollection.findOne(query);
             res.json(service)
         })
 
@@ -46,6 +46,16 @@ async function run() {
         const result = await servicesCollection.insertOne(service);
         console.log(result);
         res.json(result);
+
+        // DELETE API 
+        app.delete('/services/:id', async (req, res) => {
+            const id = req.params.id;
+
+            const query = {_id : ObjectId(id)};
+            const result =  await servicesCollection.deleteOne(query);
+
+            res.json(result);
+        })
     })
     }
     finally{
