@@ -20,6 +20,7 @@ async function run() {
         await client.connect();
         const database = client.db("Travel");
         const servicesCollection = database.collection("services")
+        const myOrdersCollection = database.collection("myOrders")
 
         // Get Single Item
         app.get('/services/:id', async(req,res) => {
@@ -36,22 +37,47 @@ async function run() {
             res.send(services)
         })
 
+        app.get("/myOrders/:email", (req, res) => {
+        console.log(req.params);
+        myOrdersCollection
+            .find({ email: req.params.email })
+            .toArray((err, results) => {
+                res.send(results);
+            });
+        });
+
+        app.get('/orders', async (req, res) => {
+        const results = await myOrdersCollection.find({}).toArray()
+        res.send(results)
+
+        })
+
+
         // POST API
         app.post('/services', async (req,res) => {
         
         const service = req.body;
-        console.log('hit the post api', service);
         
         const result = await servicesCollection.insertOne(service);
         console.log(result);
         res.json(result);
 
+
+        app.post('/myOrders/:id', (req, res) => {
+            
+            myOrdersCollection.insertOne(req.body).then((documents) => {
+            res.send(documents.insertedId);
+            });
+
+        })
+
+
         // DELETE API 
-        app.delete('/services/:id', async (req, res) => {
+        app.delete('/cancelOrder/:id', async (req, res) => {
             const id = req.params.id;
 
             const query = {_id : ObjectId(id)};
-            const result =  await servicesCollection.deleteOne(query);
+            const result =  await myOrdersCollection.deleteOne(query);
 
             res.json(result);
         })
